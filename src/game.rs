@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, error::Error, rc::Rc};
 
 use serde::{Deserialize, Serialize};
 
@@ -13,7 +13,7 @@ pub struct Game<'a> {
     players: Vec<Player>,
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct Manager<'a> {
     pub games: Vec<Game<'a>>,
     tables: Vec<Table<'a>>,
@@ -21,12 +21,19 @@ pub struct Manager<'a> {
 
 impl Manager<'_> {
     pub fn new_with_games(number: usize) -> Self {
-        let manager = Rc::new(RefCell::new(Self::default()));
+        let manager = Rc::new(RefCell::new(Self {
+            tables: Vec::with_capacity(number),
+            games: Vec::with_capacity(number),
+        }));
 
-        let tables = Vec::with_capacity(number);
         let games = (0..number).map(|_| Game::new(manager.clone())).collect();
 
-        Self { games, tables }
+        manager.borrow_mut().games = games;
+
+        // Downgrade the Rc<RefCell<Manager>> to Manager
+        let inside = Rc::into_inner(manager).unwrap();
+        let manager = RefCell::into_inner(inside);
+        manager
     }
 }
 
@@ -38,17 +45,27 @@ impl<'a> Game<'a> {
         }
     }
 
-    pub fn run(&'a self) -> Table {
+    pub fn run(&'a self) -> Result<Table, Box<dyn Error>> {
+        if self.players.len() < 2 {
+            return Err("Not enough players".into());
+        }
+
         println!("Game is running");
-        Table::new(self)
+        Ok(Table::new(self))
     }
 
-    pub fn add_player(&mut self, player: &str) {
+    pub fn add_player(&mut self, player: &str) -> Result<(), Box<dyn Error>> {
+        if self.players.len() >= 2 {
+            return Err("Game is full".into());
+        }
+
         let player = Player {
             name: player.to_string(),
         };
 
         self.players.push(player);
+
+        Ok(())
     }
 }
 

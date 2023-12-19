@@ -9,15 +9,14 @@ async fn main() {
     let mut manager = Manager::new_with_games(10);
     let game = manager.games.first_mut().unwrap();
 
-    game.add_player("John");
-    game.add_player("Jane");
+    game.add_player("John").unwrap();
+    game.add_player("Jane").unwrap();
 
-    let mut table = game.run();
+    let mut table = game.run().unwrap();
+    table.add_one_point();
     table.add_one_point();
 
     // game.add_player("Jack");
-
-    table.add_one_point();
 
 
     println!("Hello, world!");
