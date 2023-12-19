@@ -15,7 +15,9 @@ async fn main() {
     let mut table = game.run();
     table.add_one_point();
 
-    game.add_player("Jack");
+    // game.add_player("Jack");
+
+    table.add_one_point();
 
 
     println!("Hello, world!");

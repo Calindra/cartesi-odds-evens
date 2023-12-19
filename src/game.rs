@@ -1,3 +1,5 @@
+use std::{cell::RefCell, rc::Rc};
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -5,28 +7,38 @@ pub struct Player {
     name: String,
 }
 
-#[derive(Default, Debug, Serialize, Deserialize)]
-pub struct Game {
+#[derive(Debug)]
+pub struct Game<'a> {
+    manager: Rc<RefCell<Manager<'a>>>,
     players: Vec<Player>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Default, Debug)]
 pub struct Manager<'a> {
-    pub games: Vec<Game>,
+    pub games: Vec<Game<'a>>,
     tables: Vec<Table<'a>>,
 }
 
 impl Manager<'_> {
     pub fn new_with_games(number: usize) -> Self {
+        let manager = Rc::new(RefCell::new(Self::default()));
+
         let tables = Vec::with_capacity(number);
-        let games = (0..number).map(|_| Game::default()).collect();
+        let games = (0..number).map(|_| Game::new(manager.clone())).collect();
 
         Self { games, tables }
     }
 }
 
-impl Game {
-    pub fn run(&self) -> Table {
+impl<'a> Game<'a> {
+    pub fn new(manager: Rc<RefCell<Manager<'a>>>) -> Self {
+        Game {
+            manager,
+            players: Vec::new(),
+        }
+    }
+
+    pub fn run(&'a self) -> Table {
         println!("Game is running");
         Table::new(self)
     }
@@ -40,14 +52,14 @@ impl Game {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub struct Table<'a> {
-    game: &'a Game,
+    game: &'a Game<'a>,
     points: u8,
 }
 
 impl<'a> Table<'a> {
-    pub fn new(game: &'a Game) -> Self {
+    pub fn new(game: &'a Game<'a>) -> Self {
         Table { game, points: 0 }
     }
 
