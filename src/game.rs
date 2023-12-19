@@ -1,15 +1,28 @@
 use serde::{Deserialize, Serialize};
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Player {
-    name: String
+    name: String,
 }
-
 
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct Game {
     players: Vec<Player>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Manager {
+    games: Vec<Game>,
+    tables: Vec<Table>,
+}
+
+impl Manager {
+    pub fn new_with_games(number: usize) -> Self {
+        let tables = Vec::with_capacity(number);
+        let games = (0..number).map(|_| Game::default()).collect();
+
+        Self { games, tables }
+    }
 }
 
 impl Game {
